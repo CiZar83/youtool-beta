@@ -65,6 +65,21 @@
         10: 'Sumitomo Electric Hardmetal', 11: 'TaeguTec',
         12: 'Tungaloy', 13: 'Walter'
       };
+      const brandWebsites = {
+  1: 'https://cuttingtools.ceratizit.com/',
+  2: 'https://www.fraisa.com/',
+  3: 'https://www.horn-group.com/',
+  4: 'https://www.iscar.com/',
+  5: 'https://www.kennametal.com/',
+  6: 'https://www.mmc-carbide.com/',
+  7: 'https://www.osg.co.jp/',
+  8: 'https://www.sandvik.coromant.com/',
+  9: 'https://www.secotools.com/',
+  10: 'https://www.sumitool.com/',
+  11: 'https://www.taegutec.com/',
+  12: 'https://www.tungaloy.com/',
+  13: 'https://www.walter-tools.com/'
+};
       for (const item of news) {
         const card = element('article', 'news');
         card.append(element('span', 'brand', brands[item.brand_id] || `Produttore ${item.brand_id}`));
@@ -74,18 +89,33 @@
         if (item.tool_category) info.append(document.createTextNode(`  ${item.tool_category}`));
         card.append(info);
         if (item.technical_summary) card.append(element('p', '', item.technical_summary));
-        if (item.source_url) {
-          try {
-            const url = new URL(item.source_url);
-            if (url.protocol === 'https:' || url.protocol === 'http:') {
-              const link = element('a', 'source', 'Fonte ufficiale →');
-              link.href = url.href;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              card.append(link);
-            }
-          } catch (_) { /* Ignora URL non validi */ }
-        }
+   let sourceLink = null;
+let sourceLabel = '';
+
+if (item.source_url) {
+  try {
+    const url = new URL(item.source_url);
+    if (url.protocol === 'https:' || url.protocol === 'http:') {
+      sourceLink = url.href;
+      sourceLabel = 'Fonte ufficiale →';
+    }
+  } catch (_) {
+    // URL diretto non valido: usa il sito del produttore
+  }
+}
+
+if (!sourceLink && brandWebsites[item.brand_id]) {
+  sourceLink = brandWebsites[item.brand_id];
+  sourceLabel = 'Sito ufficiale del produttore →';
+}
+
+if (sourceLink) {
+  const link = element('a', 'source', sourceLabel);
+  link.href = sourceLink;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  card.append(link);
+}
         container.append(card);
       }
     } catch (error) {
