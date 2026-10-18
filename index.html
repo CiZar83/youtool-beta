@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTool Beta</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f8; color: #1f2937; }
+    header { background: #111827; color: white; padding: 28px 40px; }
+    header h1 { margin: 0; font-size: 32px; }
+    header p { margin: 7px 0 0; color: #cbd5e1; }
+    main { max-width: 1100px; margin: 35px auto; padding: 0 20px; }
+    .title { margin-bottom: 25px; }
+    .news { background: white; border-radius: 10px; padding: 22px; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .brand { font-size: 13px; font-weight: bold; color: #2563eb; text-transform: uppercase; }
+    .news h2 { margin: 8px 0; font-size: 21px; }
+    .info { color: #6b7280; font-size: 14px; margin-bottom: 12px; }
+    .news p { line-height: 1.55; white-space: pre-line; }
+    .source { display: inline-block; margin-top: 8px; color: #2563eb; text-decoration: none; font-weight: bold; }
+    .badge { display: inline-block; background: #dcfce7; color: #166534; padding: 5px 9px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+    .message { color: #6b7280; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>YouTool</h1>
+  <p>Novità dal mondo degli utensili per asportazione truciolo</p>
+</header>
+<main>
+  <div class="title">
+    <h2>Ultime novità</h2>
+    <p>Monitoraggio automatico dei principali produttori di utensili.</p>
+  </div>
+  <div id="news-container"><p class="message">Caricamento notizie...</p></div>
+</main>
+<script>
+  const API_URL = 'https://odzjflkivahuqrqihytm.supabase.co/rest/v1';
+  const PUBLIC_KEY = 'sb_publishable_nHVHlfC6LBQ7U7xaK2-a1A_gD2qYltB';
+  const container = document.getElementById('news-container');
+
+  function element(tag, className, value) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (value != null) node.textContent = String(value);
+    return node;
+  }
+
+  async function loadNews() {
+    try {
+      const endpoint = `${API_URL}/news?select=id,brand_id,product_name,news_type,tool_category,technical_summary,source_url,created_at&published_in_feed=eq.true&order=created_at.desc&limit=100`;
+      const response = await fetch(endpoint, {
+        headers: { 'apikey': PUBLIC_KEY }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const news = await response.json();
+      container.replaceChildren();
+      if (!news.length) {
+        container.append(element('p', 'message', 'Nessuna notizia pubblicata al momento.'));
+        return;
+      }
+      const brands = {
+        1: 'CERATIZIT', 2: 'FRAISA', 3: 'HORN', 4: 'ISCAR',
+        5: 'Kennametal', 6: 'Mitsubishi Materials', 7: 'OSG',
+        8: 'Sandvik Coromant', 9: 'Seco Tools',
+        10: 'Sumitomo Electric Hardmetal', 11: 'TaeguTec',
+        12: 'Tungaloy', 13: 'Walter'
+      };
+      const brandWebsites = {
+  1: 'https://cuttingtools.ceratizit.com/',
+  2: 'https://www.fraisa.com/',
+  3: 'https://www.horn-group.com/',
+  4: 'https://www.iscar.com/',
+  5: 'https://www.kennametal.com/',
+  6: 'https://www.mmc-carbide.com/',
+  7: 'https://www.osg.co.jp/',
+  8: 'https://www.sandvik.coromant.com/',
+  9: 'https://www.secotools.com/',
+  10: 'https://www.sumitool.com/',
+  11: 'https://www.taegutec.com/',
+  12: 'https://www.tungaloy.com/',
+  13: 'https://www.walter-tools.com/'
+};
+      for (const item of news) {
+        const card = element('article', 'news');
+        card.append(element('span', 'brand', brands[item.brand_id] || `Produttore ${item.brand_id}`));
+        card.append(element('h2', '', item.product_name || 'Novità prodotto'));
+        const info = element('div', 'info');
+        info.append(element('span', 'badge', 'NOVITÀ'));
+        if (item.tool_category) info.append(document.createTextNode(`  ${item.tool_category}`));
+        card.append(info);
+        if (item.technical_summary) card.append(element('p', '', item.technical_summary));
+   let sourceLink = null;
+let sourceLabel = '';
+
+if (item.source_url) {
+  try {
+    const url = new URL(item.source_url);
+    if (url.protocol === 'https:' || url.protocol === 'http:') {
+      sourceLink = url.href;
+      sourceLabel = 'Fonte ufficiale →';
+    }
+  } catch (_) {
+    // URL diretto non valido: usa il sito del produttore
+  }
+}
+
+if (!sourceLink && brandWebsites[item.brand_id]) {
+  sourceLink = brandWebsites[item.brand_id];
+  sourceLabel = 'Sito ufficiale del produttore →';
+}
+
+if (sourceLink) {
+  const link = element('a', 'source', sourceLabel);
+  link.href = sourceLink;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  card.append(link);
+}
+        container.append(card);
+      }
+    } catch (error) {
+      console.error('Errore caricamento YouTool:', error);
+      container.replaceChildren(element('p', 'message', 'Impossibile caricare le notizie. Verifica la connessione o le autorizzazioni Supabase.'));
+    }
+  }
+  loadNews();
+</script>
+</body>
+</html>
