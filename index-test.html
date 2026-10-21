@@ -161,6 +161,9 @@ if (itemTags.length > 0) {
 const tag = element('button', 'tag', `#${tagName}`);
 tag.type = 'button';
 tag.style.cursor = 'pointer';
+    if (selectedTag === tagName) {
+  tag.classList.add('active');
+}
 
 tag.addEventListener('click', () => {
   selectedTag = selectedTag === tagName ? null : tagName;
