@@ -52,6 +52,29 @@
     <h2>Ultime novità</h2>
     <p>Monitoraggio automatico dei principali produttori di utensili.</p>
   </div>
+  
+  <div style="margin-bottom: 20px;">
+  <label for="brand-filter" style="font-weight: bold; margin-right: 10px;">
+    Produttore:
+  </label>
+
+  <select id="brand-filter" style="padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+    <option value="">Tutti i produttori</option>
+    <option value="1">CERATIZIT</option>
+    <option value="2">FRAISA</option>
+    <option value="3">HORN</option>
+    <option value="4">ISCAR</option>
+    <option value="5">Kennametal</option>
+    <option value="6">Mitsubishi Materials</option>
+    <option value="7">OSG</option>
+    <option value="8">Sandvik Coromant</option>
+    <option value="9">Seco Tools</option>
+    <option value="10">Sumitomo Electric Hardmetal</option>
+    <option value="11">TaeguTec</option>
+    <option value="12">Tungaloy</option>
+    <option value="13">Walter</option>
+  </select>
+</div>
   <div id="news-container"><p class="message">Caricamento notizie...</p></div>
 </main>
 <script>
@@ -59,6 +82,13 @@
   const PUBLIC_KEY = 'sb_publishable_nHVHlfC6LBQ7U7xaK2-a1A_gD2qYltB';
   const container = document.getElementById('news-container');
   let selectedTag = null;
+  let selectedBrand = null;
+  const brandFilter = document.getElementById('brand-filter');
+
+brandFilter.addEventListener('change', () => {
+  selectedBrand = brandFilter.value === '' ? null : Number(brandFilter.value);
+  loadNews();
+});
 
   function element(tag, className, value) {
     const node = document.createElement(tag);
@@ -133,6 +163,9 @@ const newsTags = await tagsResponse.json();
   13: 'https://www.walter-tools.com/'
 };
       for (const item of news) {
+        if (selectedBrand !== null && Number(item.brand_id) !== selectedBrand) {
+  continue;
+}
         if (selectedTag) {
   const hasSelectedTag = newsTags.some(entry =>
     entry.news_id === item.id &&
