@@ -83,6 +83,24 @@ if (!tagsResponse.ok) {
 
 const newsTags = await tagsResponse.json();
       container.replaceChildren();
+      if (selectedTag) {
+  const filterBar = element('div', 'info');
+  filterBar.append(
+    element('span', '', `Filtro attivo: #${selectedTag}  `)
+  );
+
+  const clearButton = element('button', '', 'Mostra tutte');
+  clearButton.type = 'button';
+  clearButton.style.cursor = 'pointer';
+
+  clearButton.addEventListener('click', () => {
+    selectedTag = null;
+    loadNews();
+  });
+
+  filterBar.append(clearButton);
+  container.append(filterBar);
+}
       if (!news.length) {
         container.append(element('p', 'message', 'Nessuna notizia pubblicata al momento.'));
         return;
