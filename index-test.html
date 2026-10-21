@@ -53,6 +53,7 @@
   const API_URL = 'https://odzjflkivahuqrqihytm.supabase.co/rest/v1';
   const PUBLIC_KEY = 'sb_publishable_nHVHlfC6LBQ7U7xaK2-a1A_gD2qYltB';
   const container = document.getElementById('news-container');
+  let selectedTag = null;
 
   function element(tag, className, value) {
     const node = document.createElement(tag);
@@ -109,6 +110,15 @@ const newsTags = await tagsResponse.json();
   13: 'https://www.walter-tools.com/'
 };
       for (const item of news) {
+        if (selectedTag) {
+  const hasSelectedTag = newsTags.some(entry =>
+    entry.news_id === item.id &&
+    entry.tags &&
+    entry.tags.name === selectedTag
+  );
+
+  if (!hasSelectedTag) continue;
+}
         const card = element('article', 'news');
         card.append(element('span', 'brand', brands[item.brand_id] || `Produttore ${item.brand_id}`));
         card.append(element('h2', '', item.product_name || 'Novità prodotto'));
@@ -125,7 +135,14 @@ if (itemTags.length > 0) {
   const tagsContainer = element('div', 'tags');
 
   for (const tagName of itemTags) {
-    const tag = element('span', 'tag', `#${tagName}`);
+const tag = element('button', 'tag', `#${tagName}`);
+tag.type = 'button';
+tag.style.cursor = 'pointer';
+
+tag.addEventListener('click', () => {
+  selectedTag = selectedTag === tagName ? null : tagName;
+  loadNews();
+});
     tagsContainer.append(tag);
   }
 
