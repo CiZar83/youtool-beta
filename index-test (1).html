@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTool Beta</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f8; color: #1f2937; }
+    header { background: #111827; color: white; padding: 28px 40px; }
+    header h1 { margin: 0; font-size: 32px; }
+    header p { margin: 7px 0 0; color: #cbd5e1; }
+    main { max-width: 1100px; margin: 35px auto; padding: 0 20px; }
+    .title { margin-bottom: 25px; }
+    .news { background: white; border-radius: 10px; padding: 22px; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .brand { font-size: 13px; font-weight: bold; color: #2563eb; text-transform: uppercase; }
+    .news h2 { margin: 8px 0; font-size: 21px; }
+    .info { color: #6b7280; font-size: 14px; margin-bottom: 12px; }
+    .news p { line-height: 1.55; white-space: pre-line; }
+    .source { display: inline-block; margin-top: 8px; color: #2563eb; text-decoration: none; font-weight: bold; }
+    .badge { display: inline-block; background: #dcfce7; color: #166534; padding: 5px 9px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+    .message { color: #6b7280; }
+    .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #e0e7ff;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: bold;
+}
+    .tag.active {
+  background: #1d4ed8;
+  color: white;
+  border-color: #1d4ed8;
+}
+    .filters {display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin-bottom:20px;padding:18px;background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .filter-field {display:flex;flex-direction:column;gap:6px;flex:1 1 180px;min-width:160px}
+    .filter-field label {font-weight:bold;font-size:14px}
+    .filter-field select {width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#1f2937}
+    .reset-filters {padding:11px 14px;border:1px solid #cbd5e1;border-radius:6px;background:#f1f5f9;cursor:pointer;font-weight:bold}
+    .filter-count {color:#64748b;font-size:14px;margin:0 0 16px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>YouTool</h1>
+  <p>Novità dal mondo degli utensili per asportazione truciolo</p>
+</header>
+<main>
+  <div class="title">
+    <h2>Ultime novità</h2>
+    <p>Monitoraggio automatico dei principali produttori di utensili.</p>
+  </div>
+  
+  <div class="filters">
+  <div class="filter-field"><label for="brand-filter">Produttore</label>
+  <select id="brand-filter">
+    <option value="">Tutti i produttori</option>
+    <option value="1">CERATIZIT</option>
+    <option value="2">FRAISA</option>
+    <option value="3">HORN</option>
+    <option value="4">ISCAR</option>
+    <option value="5">Kennametal</option>
+    <option value="6">Mitsubishi Materials</option>
+    <option value="7">OSG</option>
+    <option value="8">Sandvik Coromant</option>
+    <option value="9">Seco Tools</option>
+    <option value="10">Sumitomo Electric Hardmetal</option>
+    <option value="11">TaeguTec</option>
+    <option value="12">Tungaloy</option>
+    <option value="13">Walter</option>
+  </select></div>
+  <div class="filter-field"><label for="work-filter">Tipo di lavorazione</label>
+    <select id="work-filter"><option value="">Tutte le lavorazioni</option>
+      <option value="Fresatura">Fresatura</option><option value="Tornitura">Tornitura</option>
+      <option value="Foratura">Foratura</option><option value="Alesatura">Alesatura</option>
+      <option value="Maschiatura">Maschiatura</option><option value="Barenatura">Barenatura</option>
+    </select></div>
+  <div class="filter-field"><label for="material-filter">Materiale ISO</label>
+    <select id="material-filter"><option value="">Tutti i materiali</option>
+      <option value="ISO-P">ISO-P — Acciai</option><option value="ISO-M">ISO-M — Inossidabili</option>
+      <option value="ISO-K">ISO-K — Ghise</option><option value="ISO-N">ISO-N — Non ferrosi</option>
+      <option value="ISO-S">ISO-S — Superleghe e titanio</option><option value="ISO-H">ISO-H — Materiali temprati</option>
+    </select></div>
+  <button id="reset-filters" class="reset-filters" type="button">Azzera filtri</button>
+</div>
+  <p id="filter-count" class="filter-count" role="status"></p>
+  <div id="news-container"><p class="message">Caricamento notizie...</p></div>
+</main>
+<script>
+  const API_URL = 'https://odzjflkivahuqrqihytm.supabase.co/rest/v1';
+  const PUBLIC_KEY = 'sb_publishable_nHVHlfC6LBQ7U7xaK2-a1A_gD2qYltB';
+  const container = document.getElementById('news-container');
+  let selectedTag = null;
+  let selectedBrand = null;
+  const brandFilter = document.getElementById('brand-filter');
+  const workFilter = document.getElementById('work-filter');
+  const materialFilter = document.getElementById('material-filter');
+  const filterCount = document.getElementById('filter-count');
+  const normalizeTag = name => String(name || '').trim().replace(/^#/, '').toUpperCase();
+  function tagMatches(list, target) {return !target || list.some(name => normalizeTag(name) === normalizeTag(target));}
+  workFilter.addEventListener('change', loadNews);
+  materialFilter.addEventListener('change', loadNews);
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    brandFilter.value = ''; workFilter.value = ''; materialFilter.value = '';
+    selectedBrand = null; selectedTag = null; loadNews();
+  });
+
+brandFilter.addEventListener('change', () => {
+  selectedBrand = brandFilter.value === '' ? null : Number(brandFilter.value);
+  loadNews();
+});
+
+  function element(tag, className, value) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (value != null) node.textContent = String(value);
+    return node;
+  }
+
+  async function loadNews() {
+    try {
+      const endpoint = `${API_URL}/news?select=id,brand_id,product_name,news_type,tool_category,technical_summary,source_url,created_at&published_in_feed=eq.true&order=created_at.desc&limit=100`;
+      const response = await fetch(endpoint, {
+        headers: { 'apikey': PUBLIC_KEY }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const news = await response.json();
+      const tagsResponse = await fetch(
+  `${API_URL}/news_tags?select=news_id,tags(id,name)`,
+  {
+    headers: { 'apikey': PUBLIC_KEY }
+  }
+);
+
+if (!tagsResponse.ok) {
+  throw new Error(`Errore caricamento hashtag: HTTP ${tagsResponse.status}`);
+}
+
+const newsTags = await tagsResponse.json();
+      container.replaceChildren();
+      const tagsByNews = new Map();
+      for (const entry of newsTags) {
+        if (!entry.tags) continue;
+        if (!tagsByNews.has(entry.news_id)) tagsByNews.set(entry.news_id, []);
+        tagsByNews.get(entry.news_id).push(entry.tags.name);
+      }
+      let visibleCount = 0;
+
+      if (selectedTag) {
+  const filterBar = element('div', 'info');
+  filterBar.append(
+    element('span', '', `Filtro attivo: #${selectedTag}  `)
+  );
+
+  const clearButton = element('button', '', 'Mostra tutte');
+  clearButton.type = 'button';
+  clearButton.style.cursor = 'pointer';
+
+  clearButton.addEventListener('click', () => {
+    selectedTag = null;
+    loadNews();
+  });
+
+  filterBar.append(clearButton);
+  container.append(filterBar);
+}
+      if (!news.length) {
+        container.append(element('p', 'message', 'Nessuna notizia pubblicata al momento.'));
+        return;
+      }
+      const brands = {
+        1: 'CERATIZIT', 2: 'FRAISA', 3: 'HORN', 4: 'ISCAR',
+        5: 'Kennametal', 6: 'Mitsubishi Materials', 7: 'OSG',
+        8: 'Sandvik Coromant', 9: 'Seco Tools',
+        10: 'Sumitomo Electric Hardmetal', 11: 'TaeguTec',
+        12: 'Tungaloy', 13: 'Walter'
+      };
+      const brandWebsites = {
+  1: 'https://cuttingtools.ceratizit.com/',
+  2: 'https://www.fraisa.com/',
+  3: 'https://www.horn-group.com/',
+  4: 'https://www.iscar.com/',
+  5: 'https://www.kennametal.com/',
+  6: 'https://www.mmc-carbide.com/',
+  7: 'https://www.osg.co.jp/',
+  8: 'https://www.sandvik.coromant.com/',
+  9: 'https://www.secotools.com/',
+  10: 'https://www.sumitool.com/',
+  11: 'https://www.taegutec.com/',
+  12: 'https://www.tungaloy.com/',
+  13: 'https://www.walter-tools.com/'
+};
+      for (const item of news) {
+        const itemTagNames = tagsByNews.get(item.id) || [];
+        if (!tagMatches(itemTagNames, workFilter.value) || !tagMatches(itemTagNames, materialFilter.value)) continue;
+        if (selectedBrand !== null && Number(item.brand_id) !== selectedBrand) {
+  continue;
+}
+        if (selectedTag) {
+  const hasSelectedTag = newsTags.some(entry =>
+    entry.news_id === item.id &&
+    entry.tags &&
+    entry.tags.name === selectedTag
+  );
+
+  if (!hasSelectedTag) continue;
+}
+        visibleCount++;
+        const card = element('article', 'news');
+        card.append(element('span', 'brand', brands[item.brand_id] || `Produttore ${item.brand_id}`));
+        card.append(element('h2', '', item.product_name || 'Novità prodotto'));
+        const info = element('div', 'info');
+        info.append(element('span', 'badge', 'NOVITÀ'));
+        if (item.tool_category) info.append(document.createTextNode(`  ${item.tool_category}`));
+        card.append(info);
+        if (item.technical_summary) card.append(element('p', '', item.technical_summary));
+        const itemTags = newsTags
+  .filter(entry => entry.news_id === item.id && entry.tags)
+  .map(entry => entry.tags.name);
+
+if (itemTags.length > 0) {
+  const tagsContainer = element('div', 'tags');
+
+  for (const tagName of itemTags) {
+const tag = element('button', 'tag', `#${tagName}`);
+tag.type = 'button';
+tag.style.cursor = 'pointer';
+    if (selectedTag === tagName) {
+  tag.classList.add('active');
+}
+
+tag.addEventListener('click', () => {
+  selectedTag = selectedTag === tagName ? null : tagName;
+  loadNews();
+});
+    tagsContainer.append(tag);
+  }
+
+  card.append(tagsContainer);
+}
+   let sourceLink = null;
+let sourceLabel = '';
+
+if (item.source_url) {
+  try {
+    const url = new URL(item.source_url);
+    if (url.protocol === 'https:' || url.protocol === 'http:') {
+      sourceLink = url.href;
+      sourceLabel = 'Fonte ufficiale →';
+    }
+  } catch (_) {
+    // URL diretto non valido: usa il sito del produttore
+  }
+}
+
+if (!sourceLink && brandWebsites[item.brand_id]) {
+  sourceLink = brandWebsites[item.brand_id];
+  sourceLabel = 'Sito ufficiale del produttore →';
+}
+
+if (sourceLink) {
+  const link = element('a', 'source', sourceLabel);
+  link.href = sourceLink;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  card.append(link);
+}
+        container.append(card);
+      }
+      filterCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'notizia trovata' : 'notizie trovate'}`;
+      if (!visibleCount) container.append(element('p', 'message', 'Nessuna notizia corrisponde ai filtri selezionati.'));
+    } catch (error) {
+      filterCount.textContent = '';
+      console.error('Errore caricamento YouTool:', error);
+      container.replaceChildren(element('p', 'message', 'Impossibile caricare le notizie. Verifica la connessione o le autorizzazioni Supabase.'));
+    }
+  }
+  loadNews();
+</script>
+</body>
+</html>
