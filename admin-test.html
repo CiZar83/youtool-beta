@@ -71,10 +71,13 @@ function buildTagEditor(item){
  const section=node('details','tag-editor');const summary=node('summary','','Gestisci hashtag');section.append(summary);
  const grid=node('div','tag-grid');const selected=new Set(newsTagMap.get(item.id)||[]);
  for(const tag of allTags){const label=node('label','tag-option');const check=document.createElement('input');check.type='checkbox';check.value=String(tag.id);check.checked=selected.has(tag.id);label.append(check,document.createTextNode('#'+tag.name));grid.append(label)}
+ if(!allTags.length)grid.append(node('p','tag-feedback error','Hashtag non disponibili: verificare permessi di lettura Supabase.'));
  section.append(grid);
  const buttons=node('div','buttons');const save=node('button','primary','Salva hashtag');save.type='button';
+ save.disabled=!allTags.length;
  const feedback=node('p','tag-feedback','');feedback.setAttribute('role','status');
  save.addEventListener('click',async()=>{
+  if(!allTags.length){feedback.textContent='Salvataggio bloccato: hashtag non caricati.';return;}
   const ids=[...grid.querySelectorAll('input:checked')].map(c=>Number(c.value));
   save.disabled=true;feedback.textContent='Salvataggio in corso...';feedback.className='tag-feedback';
   try{
@@ -98,6 +101,7 @@ async function loadTags(){
   withSession(()=>api('/rest/v1/news_tags?select=news_id,tag_id&limit=10000'))
  ]);
  allTags=tags;newsTagMap=new Map();
+ if(!tags.length)console.warn('Tabella tags: nessun dato visibile all’utente autenticato.');
  for(const link of links){if(!newsTagMap.has(link.news_id))newsTagMap.set(link.news_id,[]);newsTagMap.get(link.news_id).push(link.tag_id)}
 }
 function actionButton(label,cls,item,action){const b=node('button',cls,label);b.type='button';b.addEventListener('click',()=>changeStatus(item,action,b));return b}
