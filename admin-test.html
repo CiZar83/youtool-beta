@@ -65,7 +65,7 @@ function render(){const root=$('items');root.replaceChildren();const visible=all
  const buttons=node('div','buttons');if(!isApproved(n))buttons.append(actionButton('Approva','approve',n,'approve'));
  if(n.editorial_status!=='RIFIUTATA')buttons.append(actionButton('Rifiuta','reject',n,'reject'));
  if(isApproved(n))buttons.append(actionButton('Revoca pubblicazione','neutral',n,'revoke'));
- card.append(buttons);root.append(card)}
+ card.append(buttons);card.append(buildTagEditor(n));root.append(card)}
 }
 function buildTagEditor(item){
  const section=node('details','tag-editor');const summary=node('summary','','Gestisci hashtag');section.append(summary);
